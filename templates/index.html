@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palmprint Matching System</title>
+    <style>
+        /* 设置整个页面的文字居中 */
+        body {
+            text-align: center; /* 所有块级元素中的文字都将居中 */
+        }
+
+        /* 如果想确保某些元素（如图片、按钮等）也被居中对齐，可以设置它们的宽度并使用margin */
+        button, img {
+            display: inline-block;
+            margin-left: auto;
+            margin-right: auto;
+        }  
+        
+        /* 使用flexbox布局来居中视频和画布 */
+        #video-container {
+            display: flex;
+            justify-content: center;  /* 水平居中 */
+            align-items: center;      /* 垂直居中 */
+            height: 100%;             /* 父容器高度为100%，填满视口 */
+            flex-direction: column;   /* 确保video和canvas垂直排列 */
+        }
+
+        video, canvas {
+            display: block;  /* 默认block元素 */
+            margin-bottom: 20px;  /* 视频和画布之间的间距 */
+        }
+        
+        /* 1. 标题文字渐变，且在标题下方添加图片 */
+        h1 {
+            background: linear-gradient(to bottom, blue, green); /* 渐变背景 */
+            -webkit-background-clip: text; /* 让文字显示渐变效果 */
+            color: transparent; /* 使文字透明，显示渐变 */
+            font-size: 36px;
+            text-align: center;
+            padding-bottom: 20px;
+        }
+        /* 设置图片的位置和样式 */
+        .image-container {
+            text-align: center;  /* 图片居中显示 */
+            margin-top: 20px;  /* 图片与标题之间的间距 */
+        }
+
+        .image-container img {
+            width: 50%;  /* 控制图片的宽度 */
+            height: auto;  /* 保持图片的比例 */
+            border-radius: 8px;  /* 给图片添加圆角 */
+        }
+        /* 2. 为按钮添加图标 */
+        button[type="button"] {
+            padding: 10px 20px;
+            font-size: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button[type="button"] img {
+            margin-right: 8px; /* 图片与文字之间的间距 */
+        }
+         /* 3. 上传按钮修改样式 */
+         button[type="submit"] {
+            font-size: 20px;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: darkgreen;
+        }
+
+        #compare-btn {
+            font-size: 22px;
+            background-color: white;
+            color: red;
+            border: 3px dashed black; 
+            border-radius: 5px;
+            padding: 100px 30px;
+            cursor: pointer;
+            background-image: url('./static/palm.jpg');
+            background-size: cover;
+            background-position: center;
+            text-align: center;
+        }
+
+        #compare-btn:hover {
+            background-color: darkred;
+        }
+
+        #check-status {
+            background-image: url('./static/update.jpg');
+            background-size: cover;
+            background-position: center;
+            color: black;
+            font-size: 24px;
+            text-align: center;
+            width: 260px;
+            height: 220px;
+            border: none;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto;
+            line-height: 60px;
+        }
+
+        #check-status:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <h1>Palmprint Matching System</h1>
+    <div class="image-container">
+        <img src="./static/recognize.gif" alt="Recognition Image">
+    </div>
+    
+    <!-- 上传图片 -->
+    <form id="upload-form">
+        <h2>Upload Palm Images</h2>
+        <label for="left_hand">Left Hand:</label>
+        <input type="file" id="left_hand" name="left_hand" required><br><br>
+        <button type="button" id="left-capture-btn">
+            <img src="./static/camera.jpg" alt="camera icon" width="20" height="20">
+            Capture Left Hand Image
+        </button>
+        <div id="video-container">
+            <video id="left-video" width="320" height="240" style="display:none;"></video>
+            <canvas id="left-canvas" style="display:none;"></canvas>
+        </div>
+        
+        <label for="right_hand">Right Hand:</label>
+        <input type="file" id="right_hand" name="right_hand" required><br><br>
+        <button type="button" id="right-capture-btn">
+            <img src="./static/camera.jpg" alt="camera icon" width="20" height="20">
+            Capture Right Hand Image
+        </button>
+        <div id="video-container">
+            <video id="right-video" width="320" height="240" style="display:none;"></video>
+            <canvas id="right-canvas" style="display:none;"></canvas>
+        </div>
+        
+        <button type="submit">Upload</button>
+    </form>
+    <hr>
+
+    <!-- 上传验证图像 -->
+    <form id="validation-upload-form">
+        <h2>Upload Validation Image</h2>
+        <label for="val_image">Validation Image:</label>
+        <input type="file" id="val_image" name="val_image" required><br><br>
+        <button type="button" id="val-capture-btn">
+            <img src="./static/camera.jpg" alt="camera icon" width="20" height="20">
+            Capture Validation Image
+        </button>
+        <div id="video-container">
+            <video id="val-video" width="320" height="240" style="display:none;"></video>
+            <canvas id="val-canvas" style="display:none;"></canvas>
+        </div>
+        <button type="submit">Upload Validation Image</button><br><br>
+    </form>
+    
+    <!-- 比较按钮，初始时隐藏 -->
+    <div id="compare-section" style="display:none;">
+        <button id="compare-btn">Upload and Compare</button>
+    </div>
+    
+    <hr>
+
+    <!-- 显示上传的图片 -->
+    <div id="uploaded-images">
+        <h3>Uploaded Images:</h3>
+        <p id="left-image-name">Left Image: Not uploaded</p>
+        <p id="right-image-name">Right Image: Not uploaded</p>
+        <p id="val-image-name">Validation Image: Not uploaded</p>
+    </div>
+    
+    <!-- 状态检查 -->
+    <h3>Status</h3>
+    <button id="check-status">Check Status</button>
+    <p id="status-display">Status: Unknown</p>
+
+    <script>
+        // 获取元素
+        const leftCaptureBtn = document.getElementById('left-capture-btn');
+        const rightCaptureBtn = document.getElementById('right-capture-btn');
+        const valCaptureBtn = document.getElementById('val-capture-btn');
+        const leftVideo = document.getElementById('left-video');
+        const rightVideo = document.getElementById('right-video');
+        const valVideo = document.getElementById('val-video');
+        const leftCanvas = document.getElementById('left-canvas');
+        const rightCanvas = document.getElementById('right-canvas');
+        const valCanvas = document.getElementById('val-canvas');
+        
+        const leftInput = document.getElementById('left_hand');
+        const rightInput = document.getElementById('right_hand');
+        const valInput = document.getElementById('val_image');
+
+        // 打开摄像头视频流
+        async function openCamera(videoElement) {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoElement.srcObject = stream;
+            videoElement.style.display = 'block';
+            videoElement.play();
+        }
+
+        // 捕获当前帧
+        function captureImage(videoElement, canvasElement, inputElement) {
+            const context = canvasElement.getContext('2d');
+            context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+            canvasElement.style.display = 'block';
+            
+            // 将捕获的图像转为文件并添加到<input>元素
+            canvasElement.toBlob(function(blob) {
+                const file = new File([blob], `${inputElement.name}_captured.png`, { type: 'image/png' });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                inputElement.files = dataTransfer.files;
+            }, 'image/png');
+            
+            // 停止视频流
+            const stream = videoElement.srcObject;
+            const tracks = stream.getTracks();
+            tracks.forEach(track => track.stop());
+            videoElement.style.display = 'none';
+        }
+
+        // 设置拍照按钮的事件
+        leftCaptureBtn.onclick = () => {
+            openCamera(leftVideo);
+        };
+        rightCaptureBtn.onclick = () => {
+            openCamera(rightVideo);
+        };
+        valCaptureBtn.onclick = () => {
+            openCamera(valVideo);
+        };
+
+        // 在视频流中拍照
+        leftVideo.onclick = () => captureImage(leftVideo, leftCanvas, leftInput);
+        rightVideo.onclick = () => captureImage(rightVideo, rightCanvas, rightInput);
+        valVideo.onclick = () => captureImage(valVideo, valCanvas, valInput);
+
+        // 上传图像
+        document.getElementById('upload-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(document.getElementById('upload-form'));
+            try {
+                const response = await fetch('/upload/0', { method: 'POST', body: formData });
+                const result = await response.json();
+
+                // 更新上传图片的显示信息
+                document.getElementById('left-image-name').innerText = `Left Image: ${leftInput.files[0].name}`;
+                document.getElementById('right-image-name').innerText = `Right Image: ${rightInput.files[0].name}`;
+
+                alert(result.message);
+            } catch (err) {
+                alert('Error uploading images: ' + err.message);
+            }
+        };
+
+        // 上传验证图像后显示比较按钮
+        document.getElementById('validation-upload-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(document.getElementById('validation-upload-form'));
+
+            // 更新显示验证图像文件名
+            document.getElementById('val-image-name').innerText = `Validation Image: ${valInput.files[0].name}`;
+
+            try {
+                const response = await fetch('/upload/validation', { method: 'POST', body: formData });
+                const result = await response.json();
+                alert(result.message);
+
+                // 显示比较按钮
+                document.getElementById('compare-section').style.display = 'block';
+            } catch (err) {
+                alert('Error uploading validation image: ' + err.message);
+            }
+        };
+
+        // 比较图像
+        document.getElementById('compare-btn').onclick = async () => {
+            const valImage = document.getElementById('val_image').files[0];
+            const leftImage = document.getElementById('left_hand').files[0];
+            const rightImage = document.getElementById('right_hand').files[0];
+
+            if (!valImage || !leftImage || !rightImage) {
+                alert('Please upload all images first.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('val_image', valImage);
+            formData.append('left_image', leftImage);
+            formData.append('right_image', rightImage);
+
+            try {
+                const response = await fetch('/compare', { method: 'POST', body: formData });
+                const result = await response.json();
+                alert(`Comparison Result: ${JSON.stringify(result)}`);
+            } catch (err) {
+                alert('Error comparing images: ' + err.message);
+            }
+        };
+
+        // 检查处理状态
+        document.getElementById('check-status').onclick = async () => {
+            try {
+                const response = await fetch('/check');
+                const result = await response.json();
+                document.getElementById('status-display').innerText = `Status: ${result.status}`;
+            } catch (err) {
+                document.getElementById('status-display').innerText = 'Error checking status';
+            }
+        };
+    </script>
+</body>
+</html>
